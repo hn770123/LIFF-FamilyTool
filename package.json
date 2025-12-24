@@ -23,6 +23,7 @@
     "wrangler": "^3.22.1"
   },
   "dependencies": {
-    "@line/liff": "^2.23.1"
+    "@line/liff": "^2.23.1",
+    "bcryptjs": "^2.4.3"
   }
 }

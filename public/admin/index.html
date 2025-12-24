@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理ダッシュボード - LIFF Group Tool</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 24px;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logout-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .tab {
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      color: #666;
+      transition: all 0.3s;
+    }
+
+    .tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+    }
+
+    .btn-success {
+      background: #28a745;
+    }
+
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-active {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-inactive {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .status-used {
+      background: #cce5ff;
+      color: #004085;
+    }
+
+    .status-expired {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .status-valid {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .access-key {
+      font-family: 'Courier New', monospace;
+      background: #f8f9fa;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .info-box {
+      background: #e3f2fd;
+      border: 1px solid #90caf9;
+      color: #1976d2;
+      padding: 16px;
+      border-radius: 6px;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+
+    .success-box {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      padding: 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <h1>管理ダッシュボード</h1>
+      <div class="user-info">
+        <span id="userName"></span>
+        <button class="logout-btn" onclick="logout()">ログアウト</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" data-tab="channels">チャンネル管理</button>
+      <button class="tab" data-tab="access-keys">アクセスキー管理</button>
+    </div>
+
+    <!-- チャンネル管理タブ -->
+    <div id="channels" class="tab-content active">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">登録済みチャンネル</h2>
+        </div>
+        <div id="channelsList">
+          <div class="empty-state">読み込み中...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- アクセスキー管理タブ -->
+    <div id="access-keys" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">アクセスキー</h2>
+          <button class="btn" onclick="showGenerateKeyModal()">新しいキーを生成</button>
+        </div>
+        <div id="accessKeysList">
+          <div class="empty-state">読み込み中...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- アクセスキー生成モーダル -->
+  <div id="generateKeyModal" class="modal">
+    <div class="modal-content">
+      <h3 class="modal-header">アクセスキー生成</h3>
+      <div id="keySuccess" class="success-box" style="display: none;"></div>
+      <form id="generateKeyForm">
+        <div class="form-group">
+          <label for="expiresInDays">有効期限（日数）</label>
+          <input type="number" id="expiresInDays" name="expiresInDays" value="7" min="1" max="365" required>
+        </div>
+        <div class="info-box">
+          <strong>アクセスキーについて：</strong><br>
+          生成されたキーを使用して、新しいLINEチャンネルを登録できます。<br>
+          キーは1回のみ使用可能で、有効期限が切れると無効になります。
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeGenerateKeyModal()">キャンセル</button>
+          <button type="submit" class="btn">生成</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let adminToken = localStorage.getItem('admin_token');
+    let adminUser = JSON.parse(localStorage.getItem('admin_user') || 'null');
+
+    // 認証チェック
+    if (!adminToken || !adminUser) {
+      window.location.href = '/admin/login.html';
+    }
+
+    // ユーザー名表示
+    document.getElementById('userName').textContent = adminUser.username;
+
+    // タブ切り替え
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.getAttribute('data-tab');
+
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+        tab.classList.add('active');
+        document.getElementById(tabName).classList.add('active');
+
+        if (tabName === 'channels') {
+          loadChannels();
+        } else if (tabName === 'access-keys') {
+          loadAccessKeys();
+        }
+      });
+    });
+
+    // ログアウト
+    function logout() {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+      window.location.href = '/admin/login.html';
+    }
+
+    // チャンネル一覧読み込み
+    async function loadChannels() {
+      try {
+        const response = await fetch(`${API_BASE}/api/admin/channels`, {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            logout();
+            return;
+          }
+          throw new Error('チャンネル一覧の取得に失敗しました');
+        }
+
+        const channels = await response.json();
+        renderChannels(channels);
+      } catch (error) {
+        document.getElementById('channelsList').innerHTML = `
+          <div class="empty-state">エラー: ${error.message}</div>
+        `;
+      }
+    }
+
+    function renderChannels(channels) {
+      if (channels.length === 0) {
+        document.getElementById('channelsList').innerHTML = `
+          <div class="empty-state">チャンネルが登録されていません</div>
+        `;
+        return;
+      }
+
+      const html = `
+        <table>
+          <thead>
+            <tr>
+              <th>名前</th>
+              <th>LINE Channel ID</th>
+              <th>LIFF ID</th>
+              <th>ステータス</th>
+              <th>作成日時</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${channels.map(channel => `
+              <tr>
+                <td>${channel.name}</td>
+                <td><code>${channel.line_channel_id}</code></td>
+                <td><code>${channel.liff_id}</code></td>
+                <td>
+                  <span class="status ${channel.is_active ? 'status-active' : 'status-inactive'}">
+                    ${channel.is_active ? '有効' : '無効'}
+                  </span>
+                </td>
+                <td>${new Date(channel.created_at).toLocaleString('ja-JP')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+
+      document.getElementById('channelsList').innerHTML = html;
+    }
+
+    // アクセスキー一覧読み込み
+    async function loadAccessKeys() {
+      try {
+        const response = await fetch(`${API_BASE}/api/admin/access-keys`, {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            logout();
+            return;
+          }
+          throw new Error('アクセスキー一覧の取得に失敗しました');
+        }
+
+        const keys = await response.json();
+        renderAccessKeys(keys);
+      } catch (error) {
+        document.getElementById('accessKeysList').innerHTML = `
+          <div class="empty-state">エラー: ${error.message}</div>
+        `;
+      }
+    }
+
+    function renderAccessKeys(keys) {
+      if (keys.length === 0) {
+        document.getElementById('accessKeysList').innerHTML = `
+          <div class="empty-state">アクセスキーが生成されていません</div>
+        `;
+        return;
+      }
+
+      const html = `
+        <table>
+          <thead>
+            <tr>
+              <th>アクセスキー</th>
+              <th>ステータス</th>
+              <th>使用チャンネル</th>
+              <th>生成者</th>
+              <th>有効期限</th>
+              <th>作成日時</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${keys.map(key => {
+              const isExpired = new Date(key.expires_at) < new Date();
+              const isUsed = key.used_at !== null;
+              let status, statusClass;
+
+              if (isUsed) {
+                status = '使用済み';
+                statusClass = 'status-used';
+              } else if (isExpired) {
+                status = '期限切れ';
+                statusClass = 'status-expired';
+              } else {
+                status = '有効';
+                statusClass = 'status-valid';
+              }
+
+              return `
+                <tr>
+                  <td><span class="access-key">${key.key}</span></td>
+                  <td><span class="status ${statusClass}">${status}</span></td>
+                  <td>${key.channel_name || '-'}</td>
+                  <td>${key.created_by_username}</td>
+                  <td>${new Date(key.expires_at).toLocaleString('ja-JP')}</td>
+                  <td>${new Date(key.created_at).toLocaleString('ja-JP')}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+
+      document.getElementById('accessKeysList').innerHTML = html;
+    }
+
+    // アクセスキー生成モーダル
+    function showGenerateKeyModal() {
+      document.getElementById('generateKeyModal').classList.add('active');
+      document.getElementById('keySuccess').style.display = 'none';
+    }
+
+    function closeGenerateKeyModal() {
+      document.getElementById('generateKeyModal').classList.remove('active');
+      document.getElementById('generateKeyForm').reset();
+    }
+
+    document.getElementById('generateKeyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const expiresInDays = parseInt(document.getElementById('expiresInDays').value);
+
+      try {
+        const response = await fetch(`${API_BASE}/api/admin/access-keys`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminToken}`
+          },
+          body: JSON.stringify({ expiresInDays })
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            logout();
+            return;
+          }
+          const data = await response.json();
+          throw new Error(data.error || 'アクセスキーの生成に失敗しました');
+        }
+
+        const key = await response.json();
+
+        document.getElementById('keySuccess').innerHTML = `
+          <strong>アクセスキーを生成しました：</strong><br>
+          <span class="access-key" style="font-size: 18px; margin-top: 10px; display: block;">${key.key}</span><br>
+          <small>このキーは再表示できません。必ずコピーしてください。</small>
+        `;
+        document.getElementById('keySuccess').style.display = 'block';
+
+        document.getElementById('generateKeyForm').reset();
+
+        // 一覧を更新
+        setTimeout(() => {
+          loadAccessKeys();
+        }, 1000);
+
+      } catch (error) {
+        alert('エラー: ' + error.message);
+      }
+    });
+
+    // 初期ロード
+    loadChannels();
+  </script>
+</body>
+</html>
