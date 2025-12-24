@@ -1,0 +1,21 @@
+name = "liff-family-tool"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "family-tool-db"
+database_id = "" # Fill this after creating D1 database
+
+# Environment variables (set via wrangler secret put)
+# LINE_CHANNEL_ACCESS_TOKEN
+# LINE_CHANNEL_SECRET
+# LIFF_ID
+
+[vars]
+ENVIRONMENT = "production"
+
+# Assets for LIFF frontend
+[site]
+bucket = "./public"

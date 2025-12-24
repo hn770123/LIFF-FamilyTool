@@ -1,0 +1,7 @@
+# LINE設定
+LINE_CHANNEL_ACCESS_TOKEN=your_channel_access_token_here
+LINE_CHANNEL_SECRET=your_channel_secret_here
+LIFF_ID=your_liff_id_here
+
+# 開発環境設定
+ENVIRONMENT=development

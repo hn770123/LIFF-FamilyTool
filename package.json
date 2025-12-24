@@ -1,0 +1,28 @@
+{
+  "name": "liff-family-tool",
+  "version": "1.0.0",
+  "description": "LIFF-based family information sharing tool with task board and schedule templates",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:init": "wrangler d1 execute family-tool-db --file=./schema.sql",
+    "db:local": "wrangler d1 execute family-tool-db --local --file=./schema.sql"
+  },
+  "keywords": [
+    "liff",
+    "line",
+    "cloudflare-workers",
+    "family-tool"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20231218.0",
+    "typescript": "^5.3.3",
+    "wrangler": "^3.22.1"
+  },
+  "dependencies": {
+    "@line/liff": "^2.23.1"
+  }
+}
