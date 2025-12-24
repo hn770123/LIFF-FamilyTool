@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>チャンネル登録 - LIFF Group Tool</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      padding: 40px;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .success-message {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      padding: 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .error-message {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      padding: 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .label-description {
+      font-weight: normal;
+      color: #666;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+      font-family: inherit;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .info-box {
+      background: #e3f2fd;
+      border: 1px solid #90caf9;
+      color: #1976d2;
+      padding: 16px;
+      border-radius: 6px;
+      margin-top: 20px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .info-box strong {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .info-box ul {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+
+    .info-box li {
+      margin-bottom: 5px;
+    }
+
+    .info-box a {
+      color: #1976d2;
+      text-decoration: underline;
+    }
+
+    code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>チャンネル登録</h1>
+    <p class="subtitle">LINE公式アカウントのチャンネル情報を登録します</p>
+
+    <div id="successMessage" class="success-message" style="display: none;"></div>
+    <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="accessKey">
+          アクセスキー
+          <div class="label-description">管理者から提供されたアクセスキーを入力してください</div>
+        </label>
+        <input type="text" id="accessKey" name="accessKey" placeholder="XXXX-XXXX-XXXX-XXXX" required>
+      </div>
+
+      <div class="form-group">
+        <label for="name">
+          チャンネル名
+          <div class="label-description">管理画面で表示される名前（例: 会社名、プロジェクト名）</div>
+        </label>
+        <input type="text" id="name" name="name" placeholder="例: 株式会社サンプル" required>
+      </div>
+
+      <div class="form-group">
+        <label for="lineChannelId">
+          LINE Channel ID
+          <div class="label-description">LINE Developers Console で確認できます</div>
+        </label>
+        <input type="text" id="lineChannelId" name="lineChannelId" placeholder="12345678" required>
+      </div>
+
+      <div class="form-group">
+        <label for="lineChannelAccessToken">
+          Channel Access Token (Long-lived)
+          <div class="label-description">LINE Messaging API設定から取得してください</div>
+        </label>
+        <textarea id="lineChannelAccessToken" name="lineChannelAccessToken" placeholder="長期アクセストークン" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="lineChannelSecret">
+          Channel Secret
+          <div class="label-description">Basic Settings タブで確認できます</div>
+        </label>
+        <input type="text" id="lineChannelSecret" name="lineChannelSecret" placeholder="xxxxxxxxxxxxxxxxx" required>
+      </div>
+
+      <div class="form-group">
+        <label for="liffId">
+          LIFF ID
+          <div class="label-description">LIFF設定で作成したアプリのLIFF ID</div>
+        </label>
+        <input type="text" id="liffId" name="liffId" placeholder="2000000000-xxxxxxxx" required>
+      </div>
+
+      <button type="submit" id="submitButton">登録</button>
+    </form>
+
+    <div class="info-box">
+      <strong>📖 設定手順</strong>
+      <ul>
+        <li>LINE Developers Console にアクセス</li>
+        <li>Messaging API チャンネルを作成または選択</li>
+        <li>「Messaging API設定」タブで Channel Access Token を発行</li>
+        <li>「Basic settings」タブで Channel Secret を確認</li>
+        <li>LIFFアプリを作成し、Endpoint URLを設定：<br>
+          <code>https://your-domain.com/</code></li>
+        <li>Webhook URLを設定：<br>
+          <code>https://your-domain.com/webhook</code></li>
+      </ul>
+
+      <strong style="margin-top: 15px;">ℹ️ 注意事項</strong>
+      <ul>
+        <li>アクセスキーは1回のみ使用可能です</li>
+        <li>入力した情報は暗号化されて保存されます</li>
+        <li>トークンやシークレットは他人と共有しないでください</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+
+    const registerForm = document.getElementById('registerForm');
+    const submitButton = document.getElementById('submitButton');
+    const successMessage = document.getElementById('successMessage');
+    const errorMessage = document.getElementById('errorMessage');
+
+    function showSuccess(message) {
+      successMessage.textContent = message;
+      successMessage.style.display = 'block';
+      errorMessage.style.display = 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.style.display = 'block';
+      successMessage.style.display = 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function hideMessages() {
+      successMessage.style.display = 'none';
+      errorMessage.style.display = 'none';
+    }
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideMessages();
+
+      const formData = {
+        accessKey: document.getElementById('accessKey').value.trim(),
+        name: document.getElementById('name').value.trim(),
+        lineChannelId: document.getElementById('lineChannelId').value.trim(),
+        lineChannelAccessToken: document.getElementById('lineChannelAccessToken').value.trim(),
+        lineChannelSecret: document.getElementById('lineChannelSecret').value.trim(),
+        liffId: document.getElementById('liffId').value.trim(),
+      };
+
+      submitButton.disabled = true;
+      submitButton.textContent = '登録中...';
+
+      try {
+        const response = await fetch(`${API_BASE}/api/channels/register`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'チャンネルの登録に失敗しました');
+        }
+
+        showSuccess(`✅ チャンネル「${data.name}」の登録が完了しました！LINEグループでボットを使い始めることができます。`);
+
+        // フォームをリセット
+        registerForm.reset();
+
+      } catch (error) {
+        showError(`❌ ${error.message}`);
+        submitButton.disabled = false;
+        submitButton.textContent = '登録';
+      } finally {
+        if (submitButton.disabled) {
+          setTimeout(() => {
+            submitButton.disabled = false;
+            submitButton.textContent = '登録';
+          }, 3000);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
