@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>家族ツール - Family Tool</title>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+      background: #f5f5f5;
+      padding-bottom: 80px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .user-info {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .points-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      padding: 5px 15px;
+      border-radius: 20px;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .tabs {
+      display: flex;
+      background: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .tab.active {
+      border-bottom-color: #667eea;
+      color: #667eea;
+      font-weight: bold;
+    }
+
+    .tab-content {
+      display: none;
+      padding: 20px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .task-card, .template-card {
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 10px;
+    }
+
+    .task-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .task-status {
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .status-pending {
+      background: #ffeaa7;
+      color: #d63031;
+    }
+
+    .status-in_progress {
+      background: #74b9ff;
+      color: #0984e3;
+    }
+
+    .status-completed {
+      background: #55efc4;
+      color: #00b894;
+    }
+
+    .task-meta {
+      font-size: 13px;
+      color: #666;
+      margin: 8px 0;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-success {
+      background: #00b894;
+      color: white;
+    }
+
+    .btn-thanks {
+      background: #fd79a8;
+      color: white;
+    }
+
+    .btn-download {
+      background: #74b9ff;
+      color: white;
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-size: 24px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+
+    .fab:active {
+      transform: scale(0.9);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .modal-close {
+      float: right;
+      font-size: 28px;
+      cursor: pointer;
+      color: #999;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
+    .day-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #667eea;
+      color: white;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-right: 8px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <!-- ヘッダー -->
+  <div class="header">
+    <h1>👨‍👩‍👧‍👦 家族ツール</h1>
+    <div class="user-info" id="userInfo">読み込み中...</div>
+    <div class="points-badge" id="pointsBadge">⭐ 0 ポイント</div>
+  </div>
+
+  <!-- タブ -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('tasks')">📋 タスク</div>
+    <div class="tab" onclick="switchTab('schedules')">📅 予定</div>
+  </div>
+
+  <!-- タスクタブ -->
+  <div id="tasks-content" class="tab-content active">
+    <div id="tasksList"></div>
+    <div class="fab" onclick="openTaskModal()">+</div>
+  </div>
+
+  <!-- 予定タブ -->
+  <div id="schedules-content" class="tab-content">
+    <div id="schedulesList"></div>
+    <div class="fab" onclick="openScheduleModal()">+</div>
+  </div>
+
+  <!-- タスク作成モーダル -->
+  <div id="taskModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeTaskModal()">&times;</span>
+      <div class="modal-header">新しいタスク</div>
+      <form id="taskForm" onsubmit="createTask(event)">
+        <div class="form-group">
+          <label>タイトル *</label>
+          <input type="text" id="taskTitle" required>
+        </div>
+        <div class="form-group">
+          <label>説明</label>
+          <textarea id="taskDescription"></textarea>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%;">作成</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 予定テンプレート作成モーダル -->
+  <div id="scheduleModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeScheduleModal()">&times;</span>
+      <div class="modal-header">予定テンプレート</div>
+      <form id="scheduleForm" onsubmit="createSchedule(event)">
+        <div class="form-group">
+          <label>タイトル *</label>
+          <input type="text" id="scheduleTitle" required>
+        </div>
+        <div class="form-group">
+          <label>説明</label>
+          <textarea id="scheduleDescription"></textarea>
+        </div>
+        <div class="form-group">
+          <label>曜日 *</label>
+          <select id="scheduleDayOfWeek" required>
+            <option value="0">日曜日</option>
+            <option value="1">月曜日</option>
+            <option value="2">火曜日</option>
+            <option value="3">水曜日</option>
+            <option value="4">木曜日</option>
+            <option value="5">金曜日</option>
+            <option value="6">土曜日</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>時間 *</label>
+          <input type="time" id="scheduleTimeSlot" required>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%;">作成</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let currentUser = null;
+    let currentGroup = null;
+    const DAYS = ['日', '月', '火', '水', '木', '金', '土'];
+
+    // LIFF初期化
+    async function initializeLiff() {
+      try {
+        await liff.init({ liffId: '2006620056-LnDYw78o' }); // 実際のLIFF IDに置き換え
+
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+
+        const profile = await liff.getProfile();
+        const context = liff.getContext();
+
+        // グループIDを取得（グループトーク内の場合）
+        const groupId = context?.groupId || context?.roomId || 'default';
+
+        // グループ作成・取得
+        const groupResponse = await fetch(`${API_BASE}/api/groups`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lineGroupId: groupId,
+            name: context?.type === 'group' ? 'グループ' : '個人'
+          })
+        });
+        currentGroup = await groupResponse.json();
+
+        // ユーザー情報を取得または作成
+        const userResponse = await fetch(
+          `${API_BASE}/api/users/by-line-id?lineUserId=${profile.userId}&groupId=${currentGroup.id}`
+        );
+        currentUser = await userResponse.json();
+
+        if (!currentUser) {
+          currentUser = {
+            lineUserId: profile.userId,
+            displayName: profile.displayName,
+            groupId: currentGroup.id,
+            points: 0
+          };
+        }
+
+        // UI更新
+        document.getElementById('userInfo').textContent = `${profile.displayName}`;
+        updatePoints();
+
+        // データ読み込み
+        loadTasks();
+        loadSchedules();
+      } catch (error) {
+        console.error('LIFF initialization failed:', error);
+        // デモモード（開発用）
+        currentGroup = { id: 1, line_group_id: 'demo', name: 'デモグループ' };
+        currentUser = {
+          id: 1,
+          lineUserId: 'demo-user',
+          displayName: 'デモユーザー',
+          groupId: 1,
+          points: 0
+        };
+        document.getElementById('userInfo').textContent = 'デモモード';
+        loadTasks();
+        loadSchedules();
+      }
+    }
+
+    // タブ切り替え
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      event.target.classList.add('active');
+      document.getElementById(`${tab}-content`).classList.add('active');
+    }
+
+    // タスク一覧読み込み
+    async function loadTasks() {
+      const container = document.getElementById('tasksList');
+      container.innerHTML = '<div class="loading">読み込み中...</div>';
+
+      try {
+        const response = await fetch(`${API_BASE}/api/tasks?groupId=${currentGroup.id}`);
+        const tasks = await response.json();
+
+        if (tasks.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📝</div>
+              <div>タスクがありません</div>
+              <div style="font-size: 14px; margin-top: 10px;">+ ボタンでタスクを作成しましょう</div>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = tasks.map(task => {
+          const createdDate = new Date(task.created_at).toLocaleString('ja-JP');
+          const executedDate = task.executed_at ? new Date(task.executed_at).toLocaleString('ja-JP') : null;
+          const thankedDate = task.thanked_at ? new Date(task.thanked_at).toLocaleString('ja-JP') : null;
+
+          return `
+            <div class="task-card">
+              <div class="task-header">
+                <div class="task-title">${task.title}</div>
+                <span class="task-status status-${task.status}">
+                  ${task.status === 'pending' ? '未着手' : task.status === 'in_progress' ? '進行中' : '完了'}
+                </span>
+              </div>
+              ${task.description ? `<div style="color: #666; margin: 8px 0;">${task.description}</div>` : ''}
+              <div class="task-meta">
+                👤 作成: ${task.creator_name} (${createdDate})
+              </div>
+              ${executedDate ? `
+                <div class="task-meta">
+                  ✅ 実行: ${task.executor_name} (${executedDate})
+                </div>
+              ` : ''}
+              ${thankedDate ? `
+                <div class="task-meta">
+                  💝 ありがとう: ${task.thanked_name} (${thankedDate})
+                </div>
+              ` : ''}
+              <div class="task-actions">
+                ${task.status === 'pending' ? `
+                  <button class="btn-success" onclick="executeTask(${task.id})">実行する</button>
+                ` : ''}
+                ${task.status === 'in_progress' && !task.thanked_at ? `
+                  <button class="btn-thanks" onclick="thankTask(${task.id})">ありがとう 💝</button>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error('Failed to load tasks:', error);
+        container.innerHTML = '<div class="empty-state">エラーが発生しました</div>';
+      }
+    }
+
+    // タスク作成
+    async function createTask(event) {
+      event.preventDefault();
+
+      const title = document.getElementById('taskTitle').value;
+      const description = document.getElementById('taskDescription').value;
+
+      try {
+        await fetch(`${API_BASE}/api/tasks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            groupId: currentGroup.id,
+            title,
+            description,
+            lineUserId: currentUser.lineUserId,
+            displayName: currentUser.displayName
+          })
+        });
+
+        closeTaskModal();
+        loadTasks();
+      } catch (error) {
+        console.error('Failed to create task:', error);
+        alert('タスクの作成に失敗しました');
+      }
+    }
+
+    // タスク実行
+    async function executeTask(taskId) {
+      try {
+        await fetch(`${API_BASE}/api/tasks/${taskId}/execute`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lineUserId: currentUser.lineUserId,
+            displayName: currentUser.displayName,
+            groupId: currentGroup.id
+          })
+        });
+
+        loadTasks();
+      } catch (error) {
+        console.error('Failed to execute task:', error);
+        alert('タスクの実行に失敗しました');
+      }
+    }
+
+    // ありがとう
+    async function thankTask(taskId) {
+      try {
+        await fetch(`${API_BASE}/api/tasks/${taskId}/thank`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lineUserId: currentUser.lineUserId,
+            displayName: currentUser.displayName,
+            groupId: currentGroup.id
+          })
+        });
+
+        loadTasks();
+        updatePoints();
+      } catch (error) {
+        console.error('Failed to thank task:', error);
+        alert('ありがとうの送信に失敗しました');
+      }
+    }
+
+    // 予定テンプレート一覧読み込み
+    async function loadSchedules() {
+      const container = document.getElementById('schedulesList');
+      container.innerHTML = '<div class="loading">読み込み中...</div>';
+
+      try {
+        const response = await fetch(`${API_BASE}/api/schedule-templates?groupId=${currentGroup.id}`);
+        const schedules = await response.json();
+
+        if (schedules.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📅</div>
+              <div>予定テンプレートがありません</div>
+              <div style="font-size: 14px; margin-top: 10px;">+ ボタンでテンプレートを作成しましょう</div>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = schedules.map(schedule => `
+          <div class="template-card">
+            <div class="task-header">
+              <div class="task-title">${schedule.title}</div>
+              <span class="day-badge">${DAYS[schedule.day_of_week]}曜</span>
+            </div>
+            ${schedule.description ? `<div style="color: #666; margin: 8px 0;">${schedule.description}</div>` : ''}
+            <div class="task-meta">🕐 ${schedule.time_slot}</div>
+            <div class="task-actions">
+              <button class="btn-download" onclick="downloadICS(${schedule.id}, '${schedule.title}')">
+                📥 カレンダーに追加
+              </button>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        console.error('Failed to load schedules:', error);
+        container.innerHTML = '<div class="empty-state">エラーが発生しました</div>';
+      }
+    }
+
+    // 予定テンプレート作成
+    async function createSchedule(event) {
+      event.preventDefault();
+
+      const title = document.getElementById('scheduleTitle').value;
+      const description = document.getElementById('scheduleDescription').value;
+      const dayOfWeek = document.getElementById('scheduleDayOfWeek').value;
+      const timeSlot = document.getElementById('scheduleTimeSlot').value;
+
+      try {
+        await fetch(`${API_BASE}/api/schedule-templates`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            groupId: currentGroup.id,
+            title,
+            description,
+            dayOfWeek: parseInt(dayOfWeek),
+            timeSlot
+          })
+        });
+
+        closeScheduleModal();
+        loadSchedules();
+      } catch (error) {
+        console.error('Failed to create schedule:', error);
+        alert('予定テンプレートの作成に失敗しました');
+      }
+    }
+
+    // iCalendarダウンロード
+    async function downloadICS(templateId, title) {
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        const response = await fetch(`${API_BASE}/api/schedule-templates/${templateId}/ics?date=${today}`);
+        const blob = await response.blob();
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${title}.ics`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Failed to download ICS:', error);
+        alert('カレンダーファイルのダウンロードに失敗しました');
+      }
+    }
+
+    // ポイント更新
+    async function updatePoints() {
+      if (!currentUser || !currentUser.id) return;
+
+      try {
+        const response = await fetch(`${API_BASE}/api/users/${currentUser.id}/points`);
+        const data = await response.json();
+        document.getElementById('pointsBadge').textContent = `⭐ ${data.points || 0} ポイント`;
+      } catch (error) {
+        console.error('Failed to update points:', error);
+      }
+    }
+
+    // モーダル制御
+    function openTaskModal() {
+      document.getElementById('taskModal').classList.add('active');
+      document.getElementById('taskForm').reset();
+    }
+
+    function closeTaskModal() {
+      document.getElementById('taskModal').classList.remove('active');
+    }
+
+    function openScheduleModal() {
+      document.getElementById('scheduleModal').classList.add('active');
+      document.getElementById('scheduleForm').reset();
+    }
+
+    function closeScheduleModal() {
+      document.getElementById('scheduleModal').classList.remove('active');
+    }
+
+    // 初期化
+    initializeLiff();
+  </script>
+</body>
+</html>
