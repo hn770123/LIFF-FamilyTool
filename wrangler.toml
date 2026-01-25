@@ -6,7 +6,7 @@ compatibility_date = "2024-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "family-tool-db"
-database_id = "" # Fill this after creating D1 database
+database_id = "1e5b323a-2385-4f1b-a66f-3afe26e38657"
 
 # Environment variables (set via wrangler secret put)
 # LINE_CHANNEL_ACCESS_TOKEN
