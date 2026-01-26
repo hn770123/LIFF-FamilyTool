@@ -21,6 +21,11 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
+      - name: Verify Token
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx wrangler whoami
+
       - name: Deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
