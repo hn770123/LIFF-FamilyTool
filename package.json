@@ -21,7 +21,7 @@
     "@cloudflare/workers-types": "4.20231218.0",
     "@types/bcryptjs": "2.4.6",
     "typescript": "5.3.3",
-    "wrangler": "4.60.0"
+    "wrangler": "3.22.1"
   },
   "dependencies": {
     "@line/liff": "2.23.1",
