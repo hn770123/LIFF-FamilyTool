@@ -4,10 +4,14 @@
  */
 
 import bcrypt from 'bcryptjs';
+import { getAssetFromKV, NotFoundError, MethodNotAllowedError } from '@cloudflare/kv-asset-handler';
+// @ts-ignore
+import manifestJSON from '__STATIC_CONTENT_MANIFEST';
 
 interface Env {
   DB: D1Database;
   JWT_SECRET: string; // 管理者認証用のJWTシークレット
+  __STATIC_CONTENT: KVNamespace;
   // 環境変数からのチャンネル情報は削除（DBから取得）
 }
 
@@ -187,7 +191,7 @@ async function ensureUser(
   lineUserId: string,
   displayName: string,
   groupId: number
-) {
+): Promise<any> {
   let user = await db
     .prepare('SELECT * FROM users WHERE line_user_id = ? AND group_id = ?')
     .bind(lineUserId, groupId)
@@ -206,7 +210,7 @@ async function ensureUser(
       .first();
   }
 
-  return user;
+  return user!;
 }
 
 // iCalendar形式の生成
@@ -236,7 +240,7 @@ END:VCALENDAR`;
 }
 
 // ルーティング
-async function handleRequest(request: Request, env: Env): Promise<Response> {
+async function handleRequest(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(request.url);
   const path = url.pathname;
   const method = request.method;
@@ -246,18 +250,14 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // 静的ファイル配信（LIFF フロントエンド）
-  if (path === '/' || path === '/index.html') {
-    return fetch(new Request(`${url.origin}/index.html`, request));
-  }
-
   // API エンドポイント
-  try {
-    // ================== 管理者API ==================
+  if (path.startsWith('/api/') || path === '/webhook') {
+    try {
+      // ================== 管理者API ==================
 
     // 管理者ログイン
     if (path === '/api/admin/login' && method === 'POST') {
-      const { username, password } = await request.json();
+      const { username, password } = await request.json() as any;
 
       const admin: any = await env.DB
         .prepare('SELECT * FROM admins WHERE username = ?')
@@ -293,7 +293,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     // チャンネル作成（アクセスキー経由）
     if (path === '/api/channels/register' && method === 'POST') {
       const { accessKey, name, lineChannelId, lineChannelAccessToken, lineChannelSecret, liffId } =
-        await request.json();
+        await request.json() as any;
 
       // アクセスキーの検証
       const key: any = await env.DB
@@ -336,7 +336,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
       const channelId = path.split('/')[4];
       const { name, lineChannelAccessToken, lineChannelSecret, liffId, isActive } =
-        await request.json();
+        await request.json() as any;
 
       const updates = [];
       const params = [];
@@ -405,7 +405,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       const admin = await requireAdmin(request, env);
       if (!admin) return errorResponse('Unauthorized', 401);
 
-      const { expiresInDays = 7 } = await request.json();
+      const { expiresInDays = 7 } = await request.json() as any;
 
       const key = generateAccessKey();
       const expiresAt = new Date();
@@ -430,7 +430,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 
     // グループ作成・取得
     if (path === '/api/groups' && method === 'POST') {
-      const { channelId, lineGroupId, name } = await request.json();
+      const { channelId, lineGroupId, name } = await request.json() as any;
 
       // チャンネルの存在確認
       const channel = await getChannel(env.DB, channelId);
@@ -468,7 +468,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     // タスク作成
     if (path === '/api/tasks' && method === 'POST') {
       const { groupId, title, description, lineUserId, displayName } =
-        await request.json();
+        await request.json() as any;
 
       const group = await env.DB
         .prepare('SELECT * FROM groups WHERE id = ?')
@@ -496,7 +496,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     // タスク実行
     if (path.match(/^\/api\/tasks\/\d+\/execute$/) && method === 'PATCH') {
       const taskId = path.split('/')[3];
-      const { lineUserId, displayName, groupId } = await request.json();
+      const { lineUserId, displayName, groupId } = await request.json() as any;
 
       const user = await ensureUser(env.DB, lineUserId, displayName, groupId);
 
@@ -518,7 +518,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     // ありがとう
     if (path.match(/^\/api\/tasks\/\d+\/thank$/) && method === 'PATCH') {
       const taskId = path.split('/')[3];
-      const { lineUserId, displayName, groupId } = await request.json();
+      const { lineUserId, displayName, groupId } = await request.json() as any;
 
       const task: any = await env.DB
         .prepare('SELECT * FROM tasks WHERE id = ?')
@@ -571,7 +571,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
     // 予定テンプレート作成
     if (path === '/api/schedule-templates' && method === 'POST') {
       const { groupId, title, description, dayOfWeek, timeSlot } =
-        await request.json();
+        await request.json() as any;
 
       const result = await env.DB
         .prepare(
@@ -718,15 +718,37 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
       return jsonResponse({ status: 'ok' });
     }
 
-    return errorResponse('Not Found', 404);
-  } catch (error: any) {
-    console.error('Error:', error);
-    return errorResponse(error.message || 'Internal Server Error', 500);
+      return errorResponse('Not Found', 404);
+    } catch (error: any) {
+      console.error('Error:', error);
+      return errorResponse(error.message || 'Internal Server Error', 500);
+    }
+  }
+
+  // 静的ファイル配信
+  try {
+    return await getAssetFromKV(
+      {
+        request,
+        waitUntil: ctx.waitUntil.bind(ctx),
+      },
+      {
+        ASSET_NAMESPACE: env.__STATIC_CONTENT,
+        ASSET_MANIFEST: manifestJSON,
+      }
+    );
+  } catch (e) {
+    if (e instanceof NotFoundError) {
+      return errorResponse('Not Found', 404);
+    } else if (e instanceof MethodNotAllowedError) {
+      return errorResponse('Method Not Allowed', 405);
+    }
+    return errorResponse('An unexpected error occurred', 500);
   }
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    return handleRequest(request, env);
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    return handleRequest(request, env, ctx);
   },
 };

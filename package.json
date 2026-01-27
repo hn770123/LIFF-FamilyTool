@@ -24,6 +24,7 @@
     "wrangler": "3.22.1"
   },
   "dependencies": {
+    "@cloudflare/kv-asset-handler": "^0.4.2",
     "@line/liff": "2.23.1",
     "bcryptjs": "2.4.3"
   }
